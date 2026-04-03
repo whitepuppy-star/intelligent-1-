@@ -1,47 +1,38 @@
-def breadth_first_search(problem):
-    """너비 우선 탐색을 수행하여 최단 경로를 찾습니다."""
-    
-    # 1. 시작 상태 설정
-    start_state = problem.getStartState()
-    
-    # 시작 상태가 이미 목표 상태인지 확인
-    if problem.isGoalState(start_state):
-        return [], 0, 0
+from collections import deque
 
-    # 2. 자료구조 초기화
-    # 큐에는 (현재_상태, 여기까지의_행동_리스트) 튜플을 저장합니다.
-    queue = deque([(start_state, [])])
-    
-    # 이미 방문한 상태를 기록 (중복 탐색 방지)
-    visited = set()
-    visited.add(start_state)
+def breadth_first_search(problem):
+    # 1. open <- [시작노드], closed <- []
+    # (state, actions) 튜플을 담아 경로를 추적합니다.
+    start_state = problem.getStartState()
+    open_list = deque([(start_state, [])])
+    closed_list = set() # 효율적인 중복 체크를 위해 set 사용
     
     expanded_nodes = 0
 
-    # 3. 탐색 시작
-    while queue:
-        current_state, actions = queue.popleft()
+    # 2. while open != [] do
+    while open_list:
+        # 3. X <- open 리스트의 첫 번째 요소 (FIFO)
+        current_state, actions = open_list.popleft()
         
-        # 노드를 확장함 (getSuccessors 호출 시점을 확장으로 간주)
-        expanded_nodes += 1
+        # 4. if X == goal then return SUCCESS
+        if problem.isGoalState(current_state):
+            return actions, len(actions), expanded_nodes
         
-        # 현재 상태에서 갈 수 있는 다음 상태들 가져오기
-        successors = problem.getSuccessors(current_state)
-        
-        for next_state, action, cost in successors:
-            if next_state not in visited:
-                # 새로운 경로 생성
-                new_actions = actions + [action]
-                
-                # 목표 상태 도달 확인 (목표 검사 - Goal Test)
-                if problem.isGoalState(next_state):
-                    # 결과 반환: (경로 리스트, 총 비용, 확장된 노드 수)
-                    # 8-퍼즐에서 비용은 보통 경로의 길이와 같습니다.
-                    return new_actions, len(new_actions), expanded_nodes
-                
-                # 방문 표시 및 큐에 추가
-                visited.add(next_state)
-                queue.append((next_state, new_actions))
-
-    # 탐색 실패 시
+        # 5. X를 closed 리스트에 추가한다.
+        if current_state not in closed_list:
+            closed_list.add(current_state)
+            expanded_nodes += 1
+            
+            # 6. X의 자식 노드를 생성한다.
+            successors = problem.getSuccessors(current_state)
+            
+            for next_state, action, cost in successors:
+                # 7. 자식 노드가 이미 open이나 closed에 있다면 버린다.
+                # (이미 open에 있는 노드를 중복 추가하지 않기 위해 체크)
+                if next_state not in closed_list and next_state not in [node[0] for node in open_list]:
+                    # 8. 남은 자식 노드들은 open의 끝에 추가한다.
+                    new_actions = actions + [action]
+                    open_list.append((next_state, new_actions))
+                    
+    # 9. return FAIL
     return [], 0, expanded_nodes
