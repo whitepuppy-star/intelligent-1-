@@ -1,43 +1,47 @@
-import heapq
-
 def uniform_cost_search(problem):
-    """최소 비용을 가진 노드를 우선적으로 탐색한다."""
-    
-    # 1. 초기화: (누적 비용, 현재 상태, 행동 리스트)를 큐에 넣는다.
-    # heapq는 첫 번째 요소인 '비용'을 기준으로 최소값을 자동으로 유지한다.
-    start_state = problem.getStartState()
-    # (cost, state, path)
-    queue = [(0, start_state, [])]
-    
-    # 이미 방문한 노드를 기록하여 O(1) 시간 복잡도로 중복을 방지한다.
+    # 시작 상태
+    StartState = problem.getStartState()
+
+    # 비용이 같으니 객체 대신 숫자로 비교하게 만들기.
+    # 큐 초기화
+    count = 0
+    # 우선 순위 큐 초기화 : 누적 비용, 고유번호, 상태, 경로
+    queue = [(0, count, StartState, [])]
+
+    #중복 방지를 위해 방문 기록 (리스트보다 빠른 set 사용)
     visited = set()
-    expanded_nodes = 0
+    ExpandedNodes =0
 
     while queue:
-        # 2. 우선순위 큐에서 비용이 가장 적은 노드를 꺼낸다. (queue.get() 역할)
-        current_cost, current_state, actions = heapq.heappop(queue)
 
-        # 3. 이미 방문한 노드라면 건너뛴다. (if current not in visited 로직)
-        if current_state in visited:
+        # count 변수를 받아줄 자리 만들기. 총 4개로.
+        # 이때 비용이 가장 적은 노드를 큐에서 꺼냄 (priority queue)
+        CurrentCost, _, CurrentState, actions = heapq.heappop(queue)
+
+        # 여기서 방문 체크. (중복 방지)
+        if CurrentState in visited:
             continue
-            
-        # 4. 방문 처리 및 확장 노드 카운트
-        visited.add(current_state)
-        expanded_nodes += 1
 
-        # 5. 목표 상태 도달 확인 (이미지의 dest 체크 로직)
-        if problem.isGoalState(current_state):
-            return actions, len(actions), expanded_nodes
+        # 방문 처리 및 확장 노드 수 증가
+        visited.add(CurrentState)
+        ExpandedNodes+=1
+        
+        # 목표 상태 도달 확인 
+        if problem.isGoalState(CurrentState):
+            return actions, len(actions), ExpandedNodes
+        
+        # 인접합 자식 노드들 확장
+        for NextState, action, StepCost in problem.getSuccessors(CurrentState):
+            # 큐에 넣기 전에 미리 확인.
+            if NextState not in visited:
+               
+               # 시작점부터 누적 비용 계산하기
+                NewCost = CurrentCost + StepCost
+                NewActions = actions + [action]
 
-        # 6. 현재 노드의 자식 노드들을 생성하고 확장한다. (current.expand 역할)
-        for next_state, action, step_cost in problem.getSuccessors(current_state):
-            if next_state not in visited:
-                # 누적 가중치 합 계산: 부모의 비용 + 현재 이동 비용
-                new_cost = current_cost + step_cost
-                new_actions = actions + [action]
-                
-                # 7. 큐에 새로운 상태를 추가한다. (queue.put 역할)
-                heapq.heappush(queue, (new_cost, next_state, new_actions))
+                # 수정. 비용이 같으니 count 숫자로 비교하고 넘어가게 만듦.
+                count += 1
+                heapq.heappush(queue, (NewCost, count, NextState, actions + [action]))
 
-    # 탐색 실패 시
-    return [], 0, expanded_nodes
+    #탐색 실패 시 빈 결과 반환
+    return [], 0, ExpandedNodes
