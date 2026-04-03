@@ -10,7 +10,7 @@ def uniform_cost_search(problem):
 
     #중복 방지를 위해 방문 기록 (리스트보다 빠른 set 사용)
     visited = set()
-    ExpandedNodes =0
+    ExpandedNodes = 0
 
     while queue:
 
