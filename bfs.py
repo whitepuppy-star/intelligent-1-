@@ -1,72 +1,47 @@
-import copy
+def breadth_first_search(problem):
+    """너비 우선 탐색을 수행하여 최단 경로를 찾습니다."""
+    
+    # 1. 시작 상태 설정
+    start_state = problem.getStartState()
+    
+    # 시작 상태가 이미 목표 상태인지 확인
+    if problem.isGoalState(start_state):
+        return [], 0, 0
 
-def checkZero(puzzle):
-    """현재 퍼즐에서 빈 공간(0)의 좌표(x, y)를 반환합니다."""
-    for i in range(3):
-        for j in range(3):
-            if puzzle[i][j] == '0':
-                return i, j
-    return None
+    # 2. 자료구조 초기화
+    # 큐에는 (현재_상태, 여기까지의_행동_리스트) 튜플을 저장합니다.
+    queue = deque([(start_state, [])])
+    
+    # 이미 방문한 상태를 기록 (중복 탐색 방지)
+    visited = set()
+    visited.add(start_state)
+    
+    expanded_nodes = 0
 
-def movePuzzle(puzzle, x, y, op):
-    """지정된 연산(up, down, left, right)에 따라 퍼즐을 이동시킵니다."""
-    nx, ny = x, y
-    if op == 'up':
-        nx -= 1
-    elif op == 'down':
-        nx += 1
-    elif op == 'left':
-        ny -= 1
-    elif op == 'right':
-        ny += 1
-
-    # 퍼즐판 범위를 벗어나는지 체크
-    if 0 <= nx < 3 and 0 <= ny < 3:
-        # 빈 공간('0')과 인접 타일을 교체 (Swap)
-        puzzle[x][y], puzzle[nx][ny] = puzzle[nx][ny], puzzle[x][y]
-        return puzzle
-    else:
-        return None
-
-def bfs(puzzle):
-    visit = []
-    queue = [puzzle]
-    # 목표 상태 (이미지 기준)
-    goal = [['1', '2', '3'], ['8', '0', '4'], ['7', '6', '5']]
-    oper = ['up', 'down', 'right', 'left']
-
-    # queue가 비어있지 않은 동안 반복 (이미지의 is not None을 리스트 조건으로 수정)
+    # 3. 탐색 시작
     while queue:
-        current = queue.pop(0)
-
-        # 현재 상태가 목표 상태와 같은지 확인
-        if current == goal:
-            visit.append(current)
-            return visit
+        current_state, actions = queue.popleft()
         
-        # 이미 방문한 노드라면 건너뛰기 (성능 최적화를 위해 append 전보다 pop 직후 체크가 유리)
-        if current in visit:
-            continue
-            
-        visit.append(current)
-        x, y = checkZero(current)
+        # 노드를 확장함 (getSuccessors 호출 시점을 확장으로 간주)
+        expanded_nodes += 1
+        
+        # 현재 상태에서 갈 수 있는 다음 상태들 가져오기
+        successors = problem.getSuccessors(current_state)
+        
+        for next_state, action, cost in successors:
+            if next_state not in visited:
+                # 새로운 경로 생성
+                new_actions = actions + [action]
+                
+                # 목표 상태 도달 확인 (목표 검사 - Goal Test)
+                if problem.isGoalState(next_state):
+                    # 결과 반환: (경로 리스트, 총 비용, 확장된 노드 수)
+                    # 8-퍼즐에서 비용은 보통 경로의 길이와 같습니다.
+                    return new_actions, len(new_actions), expanded_nodes
+                
+                # 방문 표시 및 큐에 추가
+                visited.add(next_state)
+                queue.append((next_state, new_actions))
 
-        for op in oper:
-            # 원본 보존을 위해 deepcopy 사용
-            next_state = movePuzzle(copy.deepcopy(current), x, y, op)
-
-            if next_state is not None and next_state not in visit and next_state not in queue:
-                queue.append(next_state)
-
-    return None
-
-# 실행 예시
-start_node = [['1', '2', '3'], ['0', '8', '4'], ['7', '6', '5']]
-result = bfs(start_node)
-
-if result:
-    print(f"탐색 성공! 총 {len(result)}개의 상태를 거쳤습니다.")
-    for idx, state in enumerate(result):
-        print(f"Step {idx}: {state}")
-else:
-    print("해를 찾을 수 없습니다.")
+    # 탐색 실패 시
+    return [], 0, expanded_nodes
