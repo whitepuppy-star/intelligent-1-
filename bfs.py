@@ -1,43 +1,31 @@
 def breadth_first_search(problem):
-    # 초기화 하기 -> open : [시작노드], closed : []
-    StartState = problem.getStartState()
-
-    # 시작이 목표인지 확인
-    if problem.isGoalState(StartState):
-        return [], 0, 0
-
-    # FIFO 구조라 deque 사용 (현재 상태, 여기까지 오기 위한 행동 리스트) 형태로 저장.
-    OpenList = deque([(StartState, [])])
-    # 중복 체크를 속도를 위해 set을 사용 (중복 방지)
-    ClosedList = set([StartState]) 
-
-    # 확장된 노드 수 
-    ExpandedNodes = 0
-
-    while OpenList:
-        # open리스트의 첫번째 요소가 x가 됨. (FIFO) 
-        CurrentState, Actions = OpenList.popleft()
-        # 자식 노드를 생성할 준비
-        ExpandedNodes+=1
-
-        # x의 자식 노드들 생성 (Successors : 다음 상태, 행동, 비용)
-        for NextState, action, cost in problem.getSuccessors(CurrentState):
-
-            # 자식 노드가 이미 있다면 버리고, 없다면 계속 진행 (중복 방지를 위해)
-            if NextState not in ClosedList:
-                # 현재까지의 Actions에 이번에 취한 action 추가
-                NewActions = Actions + [action]
-
-                # 자식 노드 생성 후, 검사해 탐색 속도 높이기
-                if problem.isGoalState(NextState):
-                    # 경로 리스트, 경로 길이 (cost), 확장된 총 노드 수
-                    return NewActions, len(NewActions), ExpandedNodes
-                
-                # 방문한 적이 없는 노드라면 ClosedList에 추가하고, OpenList 끝에 넣음.
-                ClosedList.add(NextState)
-                # 탐색 대기열에 추가
-                OpenList.append((NextState, NewActions))
-
-    # (실패) 모든 노드를 탐색했으나 목표를 찾지 못한 경우                
-    return [], 0, ExpandedNodes
+    # 1. 초기 설정 
+    StartNode = problem.getStartState()
+    # 방문 기록부 (중복 방지용 set)
+    Visited = set()
+    # 탐색 대기소 (BFS이므로 deque 사용)
+    Queue = deque([(StartNode, [])])
     
+    # 시작 노드를 넣자마자 방문 처리 
+    Visited.add(StartNode)
+    ExpandedNodeCount = 0
+
+    while Queue:
+        # 2. 큐의 맨 앞(왼쪽)에서 데이터를 꺼냄
+        CurrentState, Actions = Queue.popleft()
+        ExpandedNodeCount += 1 
+
+        # 3. 목표 상태(정답)인지 확인
+        if problem.isGoalState(CurrentState):
+            return Actions, len(Actions), ExpandedNodeCount
+
+        # 4. 주변 노드(자식) 탐색
+        for NextState, Action, Cost in problem.getSuccessors(CurrentState):
+            # 5. 주변 노드가 아직 방문 전이라면
+            if NextState not in Visited:
+                # 즉시 방문 처리 후 큐에 추가
+                Visited.add(NextState)
+                Queue.append((NextState, Actions + [Action]))
+
+    # 탐색 실패 시 반환
+    return [], 0, ExpandedNodeCount
