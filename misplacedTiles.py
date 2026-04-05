@@ -1,4 +1,4 @@
-def heuristic(state, problem=None):
+def heuristic(state, problem):
     # Misplaced Tiles: 현재 타일과 목표 상태를 비교해 정답 자리에 없는 타일의 개수를 센다.
     misplaced = 0
     cells = state.cells
