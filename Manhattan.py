@@ -1,4 +1,4 @@
-def h_manhattan(state):
+def heuristic(state, problem):
     # state.cells는 2차원 리스트 형태.
     Distance = 0
     
